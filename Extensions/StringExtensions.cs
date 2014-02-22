@@ -156,6 +156,8 @@ namespace Extensions
 
         #endregion Porter
 
+        #region Misc String Extensions
+
         private static readonly String Utf7Preamble = Encoding.UTF8.GetString(Encoding.UTF7.GetPreamble());
         private static readonly String Utf8Preamble = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble());
         private static readonly String Utf32Preamble = Encoding.UTF8.GetString(Encoding.UTF32.GetPreamble());
@@ -203,5 +205,7 @@ namespace Extensions
             parts = parts.Select(x => x.Substring(0, 1).ToUpper() + x.Substring(1).ToLower()).ToArray();
             return parts.Aggregate((x, y) => x + y);
         }
+
+        #endregion Misc String Extensions
     }
 }

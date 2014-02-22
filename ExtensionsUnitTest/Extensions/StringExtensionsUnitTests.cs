@@ -8,6 +8,7 @@ namespace ExtensionsUnitTest.Extensions
     [TestClass]
     public class StringExtensionsUnitTests
     {
+        #region IsSimilarTo
         [TestMethod]
         public void IsSimilarToHaystackNullReturnsFalse()
         {
@@ -23,6 +24,214 @@ namespace ExtensionsUnitTest.Extensions
             const string needle = null;
             Assert.IsFalse(haystack.IsSimilarTo(needle));
         }
+
+        #endregion IsSimilarTo
+
+        #region Stopwords
+
+        [TestMethod]
+        public void ToStopwordNormalizedNullReturnsEmptyString()
+        {
+            var outString = StringExtensions.ToStopwordNormalized(null);
+            Assert.AreEqual(string.Empty, outString);
+        }
+
+        [TestMethod]
+        public void ToStopwordNormalizedEmptyStringReturnsEmptyString()
+        {
+            var outString = string.Empty.ToStopwordNormalized();
+            Assert.AreEqual(string.Empty, outString);
+        }
+
+        [TestMethod]
+        public void ToStopwordNormalizedWhiteSpaceStringReturnsEmptyString()
+        {
+            var outString = "   ".ToStopwordNormalized();
+            Assert.AreEqual(string.Empty, outString);
+        }
+
+        [TestMethod]
+        public void ToStopwordNormalizedStopWordsRemoved()
+        {
+            const string inString = "the words";
+            var outString = inString.ToStopwordNormalized();
+            Assert.AreNotEqual(inString, outString);
+            Assert.AreNotEqual(inString.Length, outString.Length);
+            Assert.IsFalse(outString.Contains("the"));
+        }
+
+        [TestMethod]
+        public void ToStopwordNormalizedReturnsLowerCaseString()
+        {
+            const string inString = "Test string";
+            var outString = inString.ToStopwordNormalized();
+            Assert.AreNotEqual(inString, outString);
+            Assert.IsFalse(outString.Contains('T'));
+        }
+
+        [TestMethod]
+        public void ToStopwordNormalizedReturnsOrderedWords()
+        {
+            const string inString = "second first";
+            var outString = inString.ToStopwordNormalized();
+            Assert.AreNotEqual(inString, outString);
+            Assert.AreNotEqual(inString.Split(' ')[0], outString.Split(' ')[0]);
+            Assert.AreEqual(inString.Split(' ')[0], outString.Split(' ')[1]);
+            Assert.AreEqual(inString.Split(' ')[1], outString.Split(' ')[0]);
+        }
+
+        [TestMethod]
+        public void ToStopwordNormalizedReturnsTrimmedString()
+        {
+            const string inString = "   term   ";
+            var outString = inString.ToStopwordNormalized();
+            Assert.AreNotEqual(inString, outString);
+            Assert.AreNotEqual(inString.Length, outString.Length);
+            Assert.IsFalse(char.IsWhiteSpace(outString[0]));
+        }
+
+        [TestMethod]
+        public void ToStopwordNormalizedHandlesSpecialChars()
+        {
+            const string inString = @" '  term  [.]\/} ";
+            var outString = inString.ToStopwordNormalized();
+            Assert.AreNotEqual(inString, outString);
+            Assert.AreNotEqual(inString.Length, outString.Length);
+            Assert.AreEqual("term", outString);
+        }
+
+        [TestMethod]
+        public void ToStopwordNormalizedHandlesNullOutputs()
+        {
+            const string inString = @"19 in 1";
+            var outString = inString.ToStopwordNormalized();
+            Assert.AreNotEqual(inString, outString);
+            Assert.AreNotEqual(inString.Length, outString.Length);
+            Assert.IsTrue(string.IsNullOrWhiteSpace(outString));
+        }
+
+        [TestMethod]
+        public void ToStopwordNormalizedRemovesNumbersInWords()
+        {
+            const string inString = @"04 infiniti fx35";
+            var outString = inString.ToStopwordNormalized();
+            Assert.AreEqual("fx infiniti", outString);
+        }
+
+        [TestMethod]
+        public void ToStopwordNormalizedPreservesForeignCharacters()
+        {
+            const string inString = "Μή μου ἅπτου";
+            var outString = inString.ToPorterStemNormalized();
+            Assert.AreEqual(outString, "ἅπτου μή μου");
+        }
+
+        #endregion Stopwords
+
+        #region ToPorter
+
+        [TestMethod]
+        public void ToPorterStemNormalizedNullReturnsEmptyString()
+        {
+            var outString = StringExtensions.ToPorterStemNormalized(null);
+            Assert.AreEqual(string.Empty, outString);
+        }
+
+        [TestMethod]
+        public void ToPorterStemNormalizedEmptyStringReturnsEmptyString()
+        {
+            var outString = string.Empty.ToPorterStemNormalized();
+            Assert.AreEqual(string.Empty, outString);
+        }
+
+        [TestMethod]
+        public void ToPorterStemNormalizedWhiteSpaceStringReturnsEmptyString()
+        {
+            var outString = "   ".ToPorterStemNormalized();
+            Assert.AreEqual(string.Empty, outString);
+        }
+
+        [TestMethod]
+        public void ToPorterStemNormalizedPluralSuffixRemoved()
+        {
+            const string inString = "words";
+            var outString = inString.ToPorterStemNormalized();
+            Assert.AreNotEqual(inString, outString);
+            Assert.AreNotEqual(inString.Length, outString.Length);
+            Assert.IsFalse(outString[outString.Length - 1] == 's');
+        }
+
+        [TestMethod]
+        public void ToPorterStemNormalizedStopWordsRemoved()
+        {
+            const string inString = "the words";
+            var outString = inString.ToPorterStemNormalized();
+            Assert.AreNotEqual(inString, outString);
+            Assert.AreNotEqual(inString.Length, outString.Length);
+            Assert.IsFalse(outString.Contains("the"));
+        }
+
+        [TestMethod]
+        public void ToPorterStemNormalizedReturnsLowerCaseString()
+        {
+            const string inString = "Test string";
+            var outString = inString.ToPorterStemNormalized();
+            Assert.AreNotEqual(inString, outString);
+            Assert.IsFalse(outString.Contains('T'));
+        }
+
+        [TestMethod]
+        public void ToPorterStemNormalizedReturnsOrderedWords()
+        {
+            const string inString = "second first";
+            var outString = inString.ToPorterStemNormalized();
+            Assert.AreNotEqual(inString, outString);
+            Assert.AreNotEqual(inString.Split(' ')[0], outString.Split(' ')[0]);
+            Assert.AreEqual(inString.Split(' ')[0], outString.Split(' ')[1]);
+            Assert.AreEqual(inString.Split(' ')[1], outString.Split(' ')[0]);
+        }
+
+        [TestMethod]
+        public void ToPorterStemNormalizedReturnsTrimmedString()
+        {
+            const string inString = "   term   ";
+            var outString = inString.ToPorterStemNormalized();
+            Assert.AreNotEqual(inString, outString);
+            Assert.AreNotEqual(inString.Length, outString.Length);
+            Assert.AreEqual("term", outString);
+        }
+
+        [TestMethod]
+        public void ToPorterStemNormalizedHandlesSpecialChars()
+        {
+            const string inString = @"   term  []\/} ";
+            var outString = inString.ToPorterStemNormalized();
+            Assert.AreNotEqual(inString, outString);
+            Assert.AreNotEqual(inString.Length, outString.Length);
+            Assert.AreEqual("term", outString);
+        }
+
+        [TestMethod]
+        public void ToPorterStemNormalizedHandlesNullOutputs()
+        {
+            const string inString = @"19 in 1";
+            var outString = inString.ToPorterStemNormalized();
+            Assert.AreNotEqual(inString, outString);
+            Assert.AreNotEqual(inString.Length, outString.Length);
+            Assert.IsTrue(string.IsNullOrWhiteSpace(outString));
+        }
+
+        [TestMethod]
+        public void ToPorterStemNormalizedPreservesForeignCharacters()
+        {
+            const string inString = "Μή μου ἅπτου";
+            var outString = inString.ToPorterStemNormalized();
+            Assert.AreEqual(outString, "ἅπτου μή μου");
+        }
+
+        #endregion ToPorter
+
+        #region ToLower
 
         [TestMethod]
         public void ToLowerAlphabeticalNullReturnsEmptyString()
@@ -62,6 +271,7 @@ namespace ExtensionsUnitTest.Extensions
             Assert.AreNotEqual(inString, outString);
             Assert.AreNotEqual(inString.Split(' ')[0], outString.Split(' ')[0]);
             Assert.AreEqual(inString.Split(' ')[0], outString.Split(' ')[1]);
+            Assert.AreEqual(inString.Split(' ')[1], outString.Split(' ')[0]);
         }
 
         [TestMethod]
@@ -139,200 +349,6 @@ namespace ExtensionsUnitTest.Extensions
         }
 
         [TestMethod]
-        public void ToStopwordNormalizedNullReturnsEmptyString()
-        {
-            var outString = StringExtensions.ToStopwordNormalized(null);
-            Assert.AreEqual(string.Empty, outString);
-        }
-
-        [TestMethod]
-        public void ToStopwordNormalizedEmptyStringReturnsEmptyString()
-        {
-            var outString = string.Empty.ToStopwordNormalized();
-            Assert.AreEqual(string.Empty, outString);
-        }
-
-        [TestMethod]
-        public void ToStopwordNormalizedWhiteSpaceStringReturnsEmptyString()
-        {
-            var outString = "   ".ToStopwordNormalized();
-            Assert.AreEqual(string.Empty, outString);
-        }
-
-        [TestMethod]
-        public void ToStopwordNormalizedStopWordsRemoved()
-        {
-            const string inString = "the words";
-            var outString = inString.ToStopwordNormalized();
-            Assert.AreNotEqual(inString, outString);
-            Assert.AreNotEqual(inString.Length, outString.Length);
-            Assert.IsFalse(outString.Contains("the"));
-        }
-
-        [TestMethod]
-        public void ToStopwordNormalizedReturnsLowerCaseString()
-        {
-            const string inString = "Test string";
-            var outString = inString.ToStopwordNormalized();
-            Assert.AreNotEqual(inString, outString);
-            Assert.IsFalse(outString.Contains('T'));
-        }
-
-        [TestMethod]
-        public void ToStopwordNormalizedReturnsOrderedWords()
-        {
-            const string inString = "second first";
-            var outString = inString.ToStopwordNormalized();
-            Assert.AreNotEqual(inString, outString);
-            Assert.AreNotEqual(inString.Split(' ')[0], outString.Split(' ')[0]);
-            Assert.AreEqual(inString.Split(' ')[0], outString.Split(' ')[1]);
-        }
-
-        [TestMethod]
-        public void ToStopwordNormalizedReturnsTrimmedString()
-        {
-            const string inString = "   term   ";
-            var outString = inString.ToStopwordNormalized();
-            Assert.AreNotEqual(inString, outString);
-            Assert.AreNotEqual(inString.Length, outString.Length);
-            Assert.IsFalse(char.IsWhiteSpace(outString[0]));
-        }
-
-        [TestMethod]
-        public void ToStopwordNormalizedHandlesSpecialChars()
-        {
-            const string inString = @" '  term  [.]\/} ";
-            var outString = inString.ToStopwordNormalized();
-            Assert.AreNotEqual(inString, outString);
-            Assert.AreNotEqual(inString.Length, outString.Length);
-            Assert.AreEqual("term", outString);
-        }
-
-        [TestMethod]
-        public void ToStopwordNormalizedHandlesNullOutputs()
-        {
-            const string inString = @"19 in 1";
-            var outString = inString.ToStopwordNormalized();
-            Assert.AreNotEqual(inString, outString);
-            Assert.AreNotEqual(inString.Length, outString.Length);
-            Assert.IsTrue(string.IsNullOrWhiteSpace(outString));
-        }
-
-        [TestMethod]
-        public void ToStopwordNormalizedRemovesNumbersInWords()
-        {
-            const string inString = @"04 infiniti fx35";
-            var outString = inString.ToStopwordNormalized();
-            Assert.AreEqual("fx infiniti", outString);
-        }
-
-        [TestMethod]
-        public void ToStopwordNormalizedPreservesForeignCharacters()
-        {
-            const string inString = "Μή μου ἅπτου";
-            var outString = inString.ToPorterStemNormalized();
-            Assert.AreEqual(outString, "ἅπτου μή μου");
-        }
-
-        [TestMethod]
-        public void ToPorterStemNormalizedNullReturnsEmptyString()
-        {
-            var outString = StringExtensions.ToPorterStemNormalized(null);
-            Assert.AreEqual(string.Empty, outString);
-        }
-
-        [TestMethod]
-        public void ToPorterStemNormalizedEmptyStringReturnsEmptyString()
-        {
-            var outString = string.Empty.ToPorterStemNormalized();
-            Assert.AreEqual(string.Empty, outString);
-        }
-
-        [TestMethod]
-        public void ToPorterStemNormalizedWhiteSpaceStringReturnsEmptyString()
-        {
-            var outString = "   ".ToPorterStemNormalized();
-            Assert.AreEqual(string.Empty, outString);
-        }
-
-        [TestMethod]
-        public void ToPorterStemNormalizedPluralSuffixRemoved()
-        {
-            const string inString = "words";
-            var outString = inString.ToPorterStemNormalized();
-            Assert.AreNotEqual(inString, outString);
-            Assert.AreNotEqual(inString.Length, outString.Length);
-            Assert.IsFalse(outString[outString.Length - 1] == 's');
-        }
-
-        [TestMethod]
-        public void ToPorterStemNormalizedStopWordsRemoved()
-        {
-            const string inString = "the words";
-            var outString = inString.ToPorterStemNormalized();
-            Assert.AreNotEqual(inString, outString);
-            Assert.AreNotEqual(inString.Length, outString.Length);
-            Assert.IsFalse(outString.Contains("the"));
-        }
-
-        [TestMethod]
-        public void ToPorterStemNormalizedReturnsLowerCaseString()
-        {
-            const string inString = "Test string";
-            var outString = inString.ToPorterStemNormalized();
-            Assert.AreNotEqual(inString, outString);
-            Assert.IsFalse(outString.Contains('T'));
-        }
-
-        [TestMethod]
-        public void ToPorterStemNormalizedReturnsOrderedWords()
-        {
-            const string inString = "second first";
-            var outString = inString.ToPorterStemNormalized();
-            Assert.AreNotEqual(inString, outString);
-            Assert.AreNotEqual(inString.Split(' ')[0], outString.Split(' ')[0]);
-            Assert.AreEqual(inString.Split(' ')[0], outString.Split(' ')[1]);
-        }
-
-        [TestMethod]
-        public void ToPorterStemNormalizedReturnsTrimmedString()
-        {
-            const string inString = "   term   ";
-            var outString = inString.ToPorterStemNormalized();
-            Assert.AreNotEqual(inString, outString);
-            Assert.AreNotEqual(inString.Length, outString.Length);
-            Assert.AreEqual("term", outString);
-        }
-
-        [TestMethod]
-        public void ToPorterStemNormalizedHandlesSpecialChars()
-        {
-            const string inString = @"   term  []\/} ";
-            var outString = inString.ToPorterStemNormalized();
-            Assert.AreNotEqual(inString, outString);
-            Assert.AreNotEqual(inString.Length, outString.Length);
-            Assert.AreEqual("term", outString);
-        }
-
-        [TestMethod]
-        public void ToPorterStemNormalizedHandlesNullOutputs()
-        {
-            const string inString = @"19 in 1";
-            var outString = inString.ToPorterStemNormalized();
-            Assert.AreNotEqual(inString, outString);
-            Assert.AreNotEqual(inString.Length, outString.Length);
-            Assert.IsTrue(string.IsNullOrWhiteSpace(outString));
-        }
-
-        [TestMethod]
-        public void ToPorterStemNormalizedPreservesForeignCharacters()
-        {
-            const string inString = "Μή μου ἅπτου";
-            var outString = inString.ToPorterStemNormalized();
-            Assert.AreEqual(outString, "ἅπτου μή μου");
-        }
-
-        [TestMethod]
         public void ToLowerWhiteSpaceNormalized()
         {
             string utf8bom = Encoding.UTF8.GetString(new byte[] { 239, 187, 191 });
@@ -373,6 +389,10 @@ namespace ExtensionsUnitTest.Extensions
             Assert.AreEqual(outBytes[1], 98);
             Assert.AreEqual(outBytes.Length, 2);
         }
+
+        #endregion ToLower
+
+        #region ToCamel
 
         [TestMethod]
         public void ToCamelCaseReturnsCamelCaseWordWithNoWhitespace()
@@ -421,5 +441,7 @@ namespace ExtensionsUnitTest.Extensions
             var outString = inString.ToCamelCase();
             Assert.AreEqual("Testphrase", outString);
         }
+
+        #endregion ToCamel
     }
 }
