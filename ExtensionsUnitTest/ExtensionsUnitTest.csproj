@@ -90,10 +90,15 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Extensions\StringExtensionsUnitTests.cs" />
+    <Compile Include="GetBadWords\GetBadWordsUnitTests.cs" />
     <Compile Include="UnitTest1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\BadWordsTester\BadWordsTester.csproj">
+      <Project>{aaead713-8840-4788-b0bb-0087e07a172f}</Project>
+      <Name>BadWordsTester</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Extensions\Extensions.csproj">
       <Project>{80b8eb31-a73e-47d7-9439-c0076ce5c7bc}</Project>
       <Name>Extensions</Name>
