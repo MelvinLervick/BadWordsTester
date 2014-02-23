@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Extensions;
@@ -11,35 +12,9 @@ namespace BadWordsTester
         public SortedDictionary<string,int> SortedBadWords;
 
         #region Constructors
-        public BadWords( string file )
+        public BadWords()
         {
-            var  newBadWords = new Dictionary<string, int>();
-            String line;
-
-            try
-            {
-                using (var sr = new StreamReader(file))
-                {
-                    while ( ( line = sr.ReadLine() ) != null )
-                    {
-                        if ( !newBadWords.ContainsKey( line ) )
-                        {
-                            newBadWords.Add( line, line.Split( ' ' ).Length );
-                        }
-                        else
-                        {
-                            Console.WriteLine("Duplicate: {0}", line);
-                        }
-                    }
-                }
-
-                SortedBadWords = new SortedDictionary<string, int>(RunBadWordsThroughPorterStem(newBadWords));
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Error Reading file: {0}", file);
-                Console.WriteLine(e.Message);
-            }
+            SortedBadWords = new SortedDictionary<string, int>();
         }
 
         public BadWords( Dictionary<string, int> badWords )
@@ -51,28 +26,65 @@ namespace BadWordsTester
 
         #region Public
 
+        public void GetBadWordsFromFile( string file )
+        {
+            var newBadWords = new Dictionary<string, int>();
+
+            using (var sr = new StreamReader( file ))
+            {
+                String line;
+                try
+                {
+                    while ( ( line = sr.ReadLine() ) != null )
+                    {
+                        if ( !newBadWords.ContainsKey( line ) )
+                        {
+                            newBadWords.Add( line, line.Split( ' ' ).Length );
+                        }
+                        else
+                        {
+                            Console.WriteLine( "Duplicate: {0}", line );
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Error Reading file: {0}", file);
+                    Console.WriteLine(e.Message);
+                }
+            }
+
+            SortedBadWords = RunBadWordsThroughPorterStem( newBadWords );
+        }
+
         public bool ContainsWord( string wordsToCheck )
         {
             string wordsStem = wordsToCheck.ToPorterStemNormalized();
 
-            return SortedBadWords.ContainsKey( wordsStem );
+            bool contains = SortedBadWords.ContainsKey( wordsStem );
+
+            return contains;
         }
 
         #endregion Public
 
         #region Local
 
-        private static Dictionary<string, int> RunBadWordsThroughPorterStem(Dictionary<string, int> badWords)
+        private static SortedDictionary<string, int> RunBadWordsThroughPorterStem(Dictionary<string, int> badWords)
         {
-            var dictionary = new Dictionary<string, int>();
+            var dictionary = new SortedDictionary<string, int>();
+            Stopwatch sw = new Stopwatch();
 
-            foreach ( KeyValuePair<string, int> word in badWords )
+            foreach ( string word in badWords.Keys )
             {
-                string s = word.Key.ToPorterStemNormalized();
+                sw.Restart();
+                string s = word.ToPorterStemNormalized();
+                Console.Write("Porter: {0}   ::: ", sw.ElapsedTicks);
                 if ( !dictionary.ContainsKey( s ) )
                 {
                     dictionary.Add( s, s.Split( ' ' ).Length );
                 }
+                Console.WriteLine("Dictionary: {0}", sw.ElapsedTicks);
             }
 
             return dictionary;
