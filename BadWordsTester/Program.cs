@@ -10,7 +10,7 @@ namespace BadWordsTester
         static void Main(string[] args)
         {
             var badWords = new BadWords();
-            Stopwatch stopWatch = new Stopwatch();
+            var stopWatch = new Stopwatch();
 
             stopWatch.Start();
             badWords.GetBadWordsFromFile(ConfigurationManager.AppSettings["BadWordsFile"]);
@@ -25,16 +25,16 @@ namespace BadWordsTester
                 {
                     Console.WriteLine("======================================================================");
                     Console.WriteLine("Needle :: {0}", needle);
-                    stopWatch.Reset();
-                    stopWatch.Start();
+                    stopWatch.Restart();
                     Console.WriteLine("{0}", badWords.ContainsWord(needle) ? "String contains one or more bad terms." : "Term was not a bad word.");
                     stopWatch.Stop();
-                    Console.WriteLine("Time to check word[{0}]: {1}", needle, stopWatch.ElapsedMilliseconds);
+                    Console.WriteLine("Time to check word[{0}]: {1} ticks", needle, stopWatch.ElapsedTicks);
                     Console.WriteLine("======================================================================\r\n");
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
             }
         }
     }

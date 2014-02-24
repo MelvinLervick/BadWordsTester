@@ -73,18 +73,19 @@ namespace BadWordsTester
         private static SortedDictionary<string, int> RunBadWordsThroughPorterStem(Dictionary<string, int> badWords)
         {
             var dictionary = new SortedDictionary<string, int>();
-            Stopwatch sw = new Stopwatch();
+            //var sw = new Stopwatch();
 
             foreach ( string word in badWords.Keys )
             {
-                sw.Restart();
-                string s = word.ToPorterStemNormalized();
-                Console.Write("Porter: {0}   ::: ", sw.ElapsedTicks);
+                //sw.Restart();
+                var s = word.ToPorterStemNormalized();
+                //Console.Write("Porter: {0}   ::: ", sw.ElapsedMilliseconds);
+
                 if ( !dictionary.ContainsKey( s ) )
                 {
                     dictionary.Add( s, s.Split( ' ' ).Length );
                 }
-                Console.WriteLine("Dictionary: {0}", sw.ElapsedTicks);
+                //Console.WriteLine("Dictionary: {0}", sw.ElapsedMilliseconds);
             }
 
             return dictionary;
