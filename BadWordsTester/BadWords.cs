@@ -61,7 +61,34 @@ namespace BadWordsTester
         {
             string wordsStem = wordsToCheck.ToPorterStemNormalized();
 
-            bool contains = SortedBadWords.ContainsKey( wordsStem );
+            bool contains = true;
+            List<string> wordStemList = wordsStem.Split( ' ' ).ToList();
+
+            //foreach ( var word in wordStemList )
+            //{
+                if ( wordStemList.Count == 1 )
+                {
+                    contains = SortedBadWords.ContainsKey( wordStemList[0] );
+                }
+                else
+                {
+                    //string word1 = word;
+                    //var keys = SortedBadWords.Where(x => wordStemList.ForEach(y => x.Key.Contains(y)) );
+                    //contains = keys.Any();
+                    foreach ( var sortedBadWord in SortedBadWords.Keys )
+                    {
+                        var badwords = sortedBadWord.Split( ' ' ).ToList();
+                        if (wordStemList.Count < badwords.Count || string.IsNullOrWhiteSpace(sortedBadWord)) continue;
+                        contains = true;
+                        foreach (var word in badwords)
+                        {
+                            contains &= wordsStem.Contains(word);
+                            if ( !contains ) break;
+                        }
+                        if ( contains ) break;
+                    }
+                }
+            //}
 
             return contains;
         }
