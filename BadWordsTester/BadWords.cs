@@ -9,17 +9,17 @@ namespace BadWordsTester
 {
     public class BadWords
     {
-        public SortedDictionary<string,int> SortedBadWords;
+        public List<string> BadWordsList;
 
         #region Constructors
         public BadWords()
         {
-            SortedBadWords = new SortedDictionary<string, int>();
+            BadWordsList = new List<string>();
         }
 
-        public BadWords( Dictionary<string, int> badWords )
+        public BadWords( List<string> badWords )
         {
-            SortedBadWords = new SortedDictionary<string, int>( RunBadWordsThroughPorterStem( badWords ) );
+            BadWordsList = badWords;
         }
 
         #endregion Constructors
@@ -28,23 +28,14 @@ namespace BadWordsTester
 
         public void GetBadWordsFromFile( string file )
         {
-            var newBadWords = new Dictionary<string, int>();
-
             using (var sr = new StreamReader( file ))
             {
-                String line;
                 try
                 {
+                    String line;
                     while ( ( line = sr.ReadLine() ) != null )
                     {
-                        if ( !newBadWords.ContainsKey( line ) )
-                        {
-                            newBadWords.Add( line, line.Split( ' ' ).Length );
-                        }
-                        else
-                        {
-                            Console.WriteLine( "Duplicate: {0}", line );
-                        }
+                        BadWordsList.Add( line );
                     }
                 }
                 catch (Exception e)
@@ -53,69 +44,138 @@ namespace BadWordsTester
                     Console.WriteLine(e.Message);
                 }
             }
-
-            SortedBadWords = RunBadWordsThroughPorterStem( newBadWords );
         }
 
-        public bool ContainsWord( string wordsToCheck )
+        public IEnumerable<string> ContainsBadWordFilter(IEnumerable<string> suspectKeywords)
         {
-            string wordsStem = wordsToCheck.ToPorterStemNormalized();
+            var filterKeywords = BadWordsList;
 
-            bool contains = true;
-            List<string> wordStemList = wordsStem.Split( ' ' ).ToList();
+            if (filterKeywords.Count == 0) return Enumerable.Empty<string>();
 
-            //foreach ( var word in wordStemList )
-            //{
-                if ( wordStemList.Count == 1 )
-                {
-                    contains = SortedBadWords.ContainsKey( wordStemList[0] );
-                }
-                else
-                {
-                    //string word1 = word;
-                    //var keys = SortedBadWords.Where(x => wordStemList.ForEach(y => x.Key.Contains(y)) );
-                    //contains = keys.Any();
-                    foreach ( var sortedBadWord in SortedBadWords.Keys )
-                    {
-                        var badwords = sortedBadWord.Split( ' ' ).ToList();
-                        if (wordStemList.Count < badwords.Count || string.IsNullOrWhiteSpace(sortedBadWord)) continue;
-                        contains = true;
-                        foreach (var word in badwords)
-                        {
-                            contains &= wordsStem.Contains(word);
-                            if ( !contains ) break;
-                        }
-                        if ( contains ) break;
-                    }
-                }
-            //}
 
-            return contains;
+            var filterMap = GenerateFilterMap(filterKeywords);
+
+
+            var filteredKeywords =
+                suspectKeywords.Select(x => new PorterStemTokenizer(x))
+                    .Where(x => x.KeywordFilterMatch(filterMap))
+                    .ToDictionary(x => x.Original, y => y.Filter);
+
+
+            if (filteredKeywords.Count > 0)
+            {
+                //filteredKeywordRegistrar.LogKeywordsFiltered(filteredKeywords, FilteredKeywordFilterTypes.FuzzyContains);
+            }
+
+
+            return filteredKeywords.Keys;
         }
+
+        //public bool ContainsBadWordFilter( string wordsToCheck )
+        //{
+        //    var wordsStem = wordsToCheck.ToPorterStemNormalized();
+
+        //    var contains = true;
+        //    var wordsStemList = wordsStem.Split(' ').GroupBy(x => x).ToDictionary(x => x.Key, y => y.Count());
+
+        //    if ( wordsStemList.Count == 1 )
+        //    {
+        //        contains = BadWordsList.ContainsKey( wordsStemList.First().Key );
+        //    }
+        //    else
+        //    {
+        //        foreach ( var sortedBadWord in BadWordsList.Keys )
+        //        {
+        //            var badwords = sortedBadWord.Split( ' ' ).ToList();
+        //            if (wordsStemList.Count < badwords.Count || string.IsNullOrWhiteSpace(sortedBadWord)) continue;
+        //            contains = true;
+        //            foreach (var word in badwords)
+        //            {
+        //                contains &= wordsStemList.ContainsKey(word);
+        //                if ( !contains ) break;
+        //            }
+        //            if ( contains ) break;
+        //        }
+        //    }
+
+        //    return contains;
+        //}
 
         #endregion Public
 
         #region Local
 
-        private static SortedDictionary<string, int> RunBadWordsThroughPorterStem(Dictionary<string, int> badWords)
+        private IDictionary<string, IEnumerable<PorterStemTokenizer>> GenerateFilterMap(IEnumerable<string> filterKeywords)
         {
-            var dictionary = new SortedDictionary<string, int>();
-            //var sw = new Stopwatch();
+            var tokenizedFilters = filterKeywords.Select(x => new PorterStemTokenizer(x)).ToList();
+            var expanded = tokenizedFilters.SelectMany(AssociateTokenizerToTokens);
+            var grouped = CollapseAssociatedTokenizers(expanded);
+            return grouped;
+        }
 
-            foreach ( string word in badWords.Keys )
+
+        private IEnumerable<KeyValuePair<string, PorterStemTokenizer>> AssociateTokenizerToTokens(
+            PorterStemTokenizer tokenizer)
+        {
+            return tokenizer.Tokens.Keys.ToDictionary(token => token, value => tokenizer);
+        }
+
+
+        private IDictionary<string, IEnumerable<PorterStemTokenizer>> CollapseAssociatedTokenizers(
+            IEnumerable<KeyValuePair<string, PorterStemTokenizer>> associations)
+        {
+            var grouped = associations.GroupBy(association => association.Key, association => association.Value);
+            return grouped.ToDictionary(group => group.Key, group => group.ToList().AsEnumerable());
+        }
+
+
+        private class PorterStemTokenizer
+        {
+            public readonly string Original;
+            public string Filter;
+            public readonly IDictionary<string, int> Tokens;
+
+
+            public PorterStemTokenizer(string s)
             {
-                //sw.Restart();
-                var s = word.ToPorterStemNormalized();
-                //Console.Write("Porter: {0}   ::: ", sw.ElapsedMilliseconds);
-
-                if ( !dictionary.ContainsKey( s ) )
-                {
-                    dictionary.Add( s, s.Split( ' ' ).Length );
-                }
-                //Console.WriteLine("Dictionary: {0}", sw.ElapsedMilliseconds);
+                Original = s;
+                Tokens =
+                    s.ToPorterStemNormalized().Split(' ').GroupBy(x => x).ToDictionary(x => x.Key, y => y.Count());
             }
 
-            return dictionary;
+
+            public bool KeywordFilterMatch(IDictionary<string, IEnumerable<PorterStemTokenizer>> tokenizedFilters)
+            {
+                var narrowedFilters = NarrowFilters(tokenizedFilters);
+                return narrowedFilters.Any(KeywordMatchesFilterItem);
+            }
+
+
+            private IEnumerable<PorterStemTokenizer> NarrowFilters(IDictionary<string, IEnumerable<PorterStemTokenizer>> tokenizedFilters)
+            {
+                var filtersForSuspectTokens =
+                    Tokens.Keys.Where(tokenizedFilters.ContainsKey).Select(x => tokenizedFilters[x]);
+
+                var smallestFilterSet =
+                    filtersForSuspectTokens.Where(x => x.Any()).OrderBy(x => x.Count()).FirstOrDefault();
+
+
+                return smallestFilterSet ?? Enumerable.Empty<PorterStemTokenizer>();
+            }
+
+
+            private bool KeywordMatchesFilterItem(PorterStemTokenizer tokenizedFilter)
+            {
+                Filter = tokenizedFilter.Original;
+                var matched =
+                    tokenizedFilter.Tokens.All(
+                        x =>
+                            Tokens.ContainsKey(x.Key) &&
+                            Tokens[x.Key] >= tokenizedFilter.Tokens[x.Key]);
+
+
+                return matched;
+            }
         }
 
         #endregion Local

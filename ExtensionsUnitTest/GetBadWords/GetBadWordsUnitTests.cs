@@ -9,34 +9,46 @@ namespace ExtensionsUnitTest.GetBadWords
     public class GetBadWordsUnitTests
     {
         [TestMethod]
-        public void GetBadWordsCreatesOrderedDictionary()
+        public void ContainsBadWordFilterReturnsFalseForPartialBadWordsFound()
         {
             var badWords = GetBadWords();
-
-            Assert.IsTrue(badWords.SortedBadWords.First().Key.Contains("best"));
-            Assert.IsTrue(badWords.SortedBadWords.First().Value == 3);
+            var keyword = new List<string>{ "large men" };
+            Assert.IsFalse(badWords.ContainsBadWordFilter(keyword).Any());
         }
 
         [TestMethod]
-        public void GetBadWordsCreatesOrderedDictionaryWhenAddingBadWords()
+        public void ContainsBadWordFilterReturnsTrueForAllBadWordsFoundInSameOrder()
         {
             var badWords = GetBadWords();
-            const string aName = "apples";
+            var keyword = new List<string> {"very large men are always the best"};
+            Assert.IsTrue(badWords.ContainsBadWordFilter(keyword).Any());
+        }
 
-            badWords.SortedBadWords.Add( aName, 1 );
+        [TestMethod]
+        public void ContainsBadWordFilterReturnTrueForAllBadWordsFoundInRandomOrder()
+        {
+            var badWords = GetBadWords();
+            var keyword = new List<string>{"The best men are often large"};
+            Assert.IsTrue(badWords.ContainsBadWordFilter(keyword).Any());
+        }
 
-            Assert.IsTrue(badWords.SortedBadWords.First().Key.Contains(aName));
+        [TestMethod]
+        public void ContainsBadWordFilterReturnFalseForMenVsMan()
+        {
+            var badWords = GetBadWords();
+            var keyword = new List<string>{"The best man is often large"};
+            Assert.IsFalse(badWords.ContainsBadWordFilter(keyword).Any());
         }
 
         private static BadWords GetBadWords()
         {
             var badWords =
-                new BadWords( new Dictionary<string, int>
+                new BadWords( new List<string>
                 {
-                    {"xrated", 1},
-                    {"the small girls", 3},
-                    {"the large boys", 3},
-                    {"the large men are best", 5}
+                    {"xrated"},
+                    {"the small girls"},
+                    {"the large boys"},
+                    {"the large men are best"}
                 } );
             return badWords;
         }
